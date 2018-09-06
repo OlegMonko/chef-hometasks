@@ -1,0 +1,22 @@
+[root@chef opt]# chef-client
+Starting Chef Client, version 14.4.56
+resolving cookbooks for run list: ["task1_jboss"]
+Synchronizing Cookbooks:
+  - task1_jboss (0.1.0)
+Installing Cookbook Gems:
+Compiling Cookbooks...
+Converging 5 resources
+Recipe: task1_jboss::default
+  * execute[Java_install] action run
+    - execute /vagrant/jdk-6u45-linux-x64-rpm.bin
+  * yum_package[unzip] action install (up to date)
+  * execute[Jboss_extract] action run
+    - execute unzip /vagrant/jboss-eap-5.1.2.zip -d /opt/
+  * execute[Deploy] action run
+    - execute cp /vagrant/clusterjsp.war /opt/jboss-eap-5.1/jboss-as/server/default/deploy/
+  * execute[Jboss_run] action run
+    - execute nohup /opt/jboss-eap-5.1/jboss-as/bin/run.sh -b 192.168.1.51 &
+
+Running handlers:
+Running handlers complete
+Chef Client finished, 4/5 resources updated in 22 seconds

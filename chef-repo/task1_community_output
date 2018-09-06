@@ -1,0 +1,255 @@
+[root@chef vagrant]# chef-client
+Starting Chef Client, version 14.4.56
+resolving cookbooks for run list: ["task1_apache", "task1_community"]
+Synchronizing Cookbooks:
+  - task1_apache (0.1.0)
+  - docker (4.6.5)
+  - task1_community (0.1.0)
+Installing Cookbook Gems:
+Compiling Cookbooks...
+Converging 5 resources
+Recipe: task1_apache::default
+  * yum_package[httpd] action install (up to date)
+  * service[httpd] action enable (up to date)
+  * service[httpd] action start (up to date)
+Recipe: task1_community::default
+  * docker_service[default] action create
+    * docker_installation_script[default] action create
+      * yum_package[curl] action install (up to date)
+      * execute[install docker] action run
+        - execute curl -sSL https://get.docker.com/ | sh
+    
+    * docker_service[default] action restart
+      * docker_service_manager_systemd[default] action restart
+        * service[docker] action disable (up to date)
+        * service[docker] action stop (up to date)
+        * directory[/usr/libexec/docker] action create
+          - create new directory /usr/libexec/docker
+          - change mode from '' to '0755'
+          - change owner from '' to 'root'
+          - change group from '' to 'root'
+        * template[/usr/libexec/docker/docker-wait-ready] action create
+          - create new file /usr/libexec/docker/docker-wait-ready
+          - update content in file /usr/libexec/docker/docker-wait-ready from none to 64d78d
+          --- /usr/libexec/docker/docker-wait-ready	2018-09-06 14:10:13.087962310 +0100
+          +++ /usr/libexec/docker/.chef-docker-wait-ready20180906-7776-b47h92	2018-09-06 14:10:13.087962310 +0100
+          @@ -1 +1,11 @@
+          +#!/usr/bin/env bash
+          +i=0
+          +while [ $i -lt 40 ]; do
+          +  /usr/bin/docker  ps | head -n 1 | grep ^CONTAINER > /dev/null 2>&1
+          +  [ $? -eq 0 ] && break
+          +  ((i++))
+          +  sleep 0.5
+          +done
+          +[ $i -eq 40 ] && exit 1
+          +exit 0
+          - change mode from '' to '0755'
+          - change owner from '' to 'root'
+          - change group from '' to 'root'
+        * template[/lib/systemd/system/docker.socket] action create
+          - create new file /lib/systemd/system/docker.socket
+          - update content in file /lib/systemd/system/docker.socket from none to 7d06f6
+          --- /lib/systemd/system/docker.socket	2018-09-06 14:10:13.129962174 +0100
+          +++ /lib/systemd/system/.chef-docker20180906-7776-xvr4mo.socket	2018-09-06 14:10:13.129962174 +0100
+          @@ -1 +1,13 @@
+          +[Unit]
+          +Description=Docker Socket for the API
+          +PartOf=docker.service
+          +
+          +[Socket]
+          +ListenStream=/var/run/docker.sock
+          +SocketMode=0660
+          +SocketUser=root
+          +SocketGroup=docker
+          +
+          +[Install]
+          +WantedBy=sockets.target
+          - change mode from '' to '0644'
+          - change owner from '' to 'root'
+          - change group from '' to 'root'
+        * template[/lib/systemd/system/docker.service] action create
+          - update content in file /lib/systemd/system/docker.service from f67888 to 1eff05
+          --- /lib/systemd/system/docker.service	2018-08-21 18:17:35.000000000 +0100
+          +++ /lib/systemd/system/.chef-docker20180906-7776-mmy6t9.service	2018-09-06 14:10:13.140962137 +0100
+          @@ -1,7 +1,8 @@
+           [Unit]
+           Description=Docker Application Container Engine
+           Documentation=https://docs.docker.com
+          -After=network-online.target firewalld.service
+          +After=network-online.target docker.socket firewalld.service
+          +Requires=docker.socket
+           Wants=network-online.target
+           
+           [Service]
+          @@ -9,16 +10,16 @@
+           # the default is not to use systemd for cgroups because the delegate issues still
+           # exists and systemd currently does not support the cgroup feature set required
+           # for containers run by docker
+          -ExecStart=/usr/bin/dockerd
+          +ExecStart=/usr/bin/dockerd -H fd://
+           ExecReload=/bin/kill -s HUP $MAINPID
+          +LimitNOFILE=1048576
+           # Having non-zero Limit*s causes performance problems due to accounting overhead
+           # in the kernel. We recommend using cgroups to do container-local accounting.
+          -LimitNOFILE=infinity
+           LimitNPROC=infinity
+           LimitCORE=infinity
+           # Uncomment TasksMax if your systemd version supports it.
+           # Only systemd 226 and above support this version.
+          -#TasksMax=infinity
+          +TasksMax=infinity
+           TimeoutStartSec=0
+           # set delegate yes so that systemd does not reset the cgroups of docker containers
+           Delegate=yes
+        * template[/etc/systemd/system/docker.socket] action create
+          - create new file /etc/systemd/system/docker.socket
+          - update content in file /etc/systemd/system/docker.socket from none to 7d06f6
+          --- /etc/systemd/system/docker.socket	2018-09-06 14:10:13.152962098 +0100
+          +++ /etc/systemd/system/.chef-docker20180906-7776-c06pc4.socket	2018-09-06 14:10:13.150962105 +0100
+          @@ -1 +1,13 @@
+          +[Unit]
+          +Description=Docker Socket for the API
+          +PartOf=docker.service
+          +
+          +[Socket]
+          +ListenStream=/var/run/docker.sock
+          +SocketMode=0660
+          +SocketUser=root
+          +SocketGroup=docker
+          +
+          +[Install]
+          +WantedBy=sockets.target
+          - change mode from '' to '0644'
+          - change owner from '' to 'root'
+          - change group from '' to 'root'
+        * template[/etc/systemd/system/docker.service] action create
+          - create new file /etc/systemd/system/docker.service
+          - update content in file /etc/systemd/system/docker.service from none to f79d14
+          --- /etc/systemd/system/docker.service	2018-09-06 14:10:13.161962068 +0100
+          +++ /etc/systemd/system/.chef-docker20180906-7776-1r145k.service	2018-09-06 14:10:13.161962068 +0100
+          @@ -1 +1,29 @@
+          +[Unit]
+          +Description=Docker Application Container Engine
+          +Documentation=https://docs.docker.com
+          +After=network-online.target docker.socket firewalld.service
+          +Requires=docker.socket
+          +Wants=network-online.target
+          +
+          +[Service]
+          +Type=notify
+          +ExecStartPre=/sbin/sysctl -w net.ipv4.ip_forward=1
+          +ExecStartPre=/sbin/sysctl -w net.ipv6.conf.all.forwarding=1
+          +ExecStart=/usr/bin/dockerd  --group=docker --pidfile=/var/run/docker.pid
+          +ExecStartPost=/usr/libexec/docker/docker-wait-ready
+          +ExecReload=/bin/kill -s HUP $MAINPID
+          +LimitNOFILE=1048576
+          +LimitNPROC=infinity
+          +LimitCORE=infinity
+          +TasksMax=infinity
+          +TimeoutStartSec=0
+          +Delegate=yes
+          +KillMode=process
+          +Restart=always
+          +StartLimitBurst=3
+          +StartLimitInterval=60s
+          +
+          +
+          +[Install]
+          +WantedBy=multi-user.target
+          - change mode from '' to '0644'
+          - change owner from '' to 'root'
+          - change group from '' to 'root'
+        * execute[systemctl daemon-reload] action run
+          - execute /bin/systemctl daemon-reload
+        * execute[systemctl try-restart docker] action run
+          - execute /bin/systemctl try-restart docker
+        * execute[systemctl daemon-reload] action nothing (skipped due to action :nothing)
+        * execute[systemctl try-restart docker] action nothing (skipped due to action :nothing)
+        * service[docker] action enable
+          - enable service service[docker]
+        * service[docker] action start
+          - start service service[docker]
+      
+    
+  
+  * docker_service[default] action start
+    * docker_service_manager_systemd[default] action start
+      * directory[/usr/libexec/docker] action create (up to date)
+      * template[/usr/libexec/docker/docker-wait-ready] action create (up to date)
+      * template[/lib/systemd/system/docker.socket] action create (up to date)
+      * template[/lib/systemd/system/docker.service] action create (up to date)
+      * template[/etc/systemd/system/docker.socket] action create (up to date)
+      * template[/etc/systemd/system/docker.service] action create (up to date)
+      * execute[systemctl daemon-reload] action nothing (skipped due to action :nothing)
+      * execute[systemctl try-restart docker] action nothing (skipped due to action :nothing)
+      * service[docker] action enable (up to date)
+      * service[docker] action start (up to date)
+       (up to date)
+     (up to date)
+  * docker_image[busybox] action pull
+    - Pull image busybox:latest
+  * docker_container[ping] action run
+    - create ping
+    -   set container_name              to "ping" (default value)
+    -   set repo                        to "busybox"
+    -   set tag                         to "latest" (default value)
+    -   set command                     to ["nc", "-ll", "-p", "1234", "-e", "/bin/cat"]
+    -   set cap_add                     to nil (default value)
+    -   set cap_drop                    to nil (default value)
+    -   set cgroup_parent               to "" (default value)
+    -   set cpu_shares                  to 0 (default value)
+    -   set cpuset_cpus                 to "" (default value)
+    -   set devices                     to [] (default value)
+    -   set dns                         to [] (default value)
+    -   set dns_search                  to [] (default value)
+    -   set domain_name                 to "" (default value)
+    -   set entrypoint                  to nil (default value)
+    -   set env                         to [] (default value)
+    -   set extra_hosts                 to nil (default value)
+    -   set exposed_ports               to {"1234/tcp"=>{}}
+    -   set hostname                    to nil (default value)
+    -   set ipc_mode                    to "" (default value)
+    -   set kernel_memory               to 0 (default value)
+    -   set labels                      to {} (default value)
+    -   set links                       to nil (default value)
+    -   set init                        to nil (default value)
+    -   set ip_address                  to nil (default value)
+    -   set mac_address                 to nil (default value)
+    -   set memory                      to 0 (default value)
+    -   set memory_swap                 to 0 (default value)
+    -   set memory_swappiness           to 0 (default value)
+    -   set memory_reservation          to 0 (default value)
+    -   set network_disabled            to false (default value)
+    -   set network_mode                to "bridge" (default value)
+    -   set network_aliases             to [] (default value)
+    -   set oom_kill_disable            to false (default value)
+    -   set oom_score_adj               to -500 (default value)
+    -   set outfile                     to nil (default value)
+    -   set port_bindings               to {"1234/tcp"=>[{"HostIp"=>"0.0.0.0", "HostPort"=>"1234"}]}
+    -   set pid_mode                    to "" (default value)
+    -   set privileged                  to false (default value)
+    -   set publish_all_ports           to false (default value)
+    -   set remove_volumes              to false (default value)
+    -   set restart_maximum_retry_count to 0 (default value)
+    -   set restart_policy              to nil (default value)
+    -   set runtime                     to "runc" (default value)
+    -   set ro_rootfs                   to false (default value)
+    -   set security_opt                to nil (default value)
+    -   set signal                      to "SIGTERM" (default value)
+    -   set sysctls                     to {} (default value)
+    -   set tty                         to false (default value)
+    -   set ulimits                     to nil (default value)
+    -   set user                        to "" (default value)
+    -   set userns_mode                 to "" (default value)
+    -   set uts_mode                    to "" (default value)
+    -   set volumes                     to {} (default value)
+    -   set volumes_from                to nil (default value)
+    -   set volume_driver               to nil (default value)
+    -   set working_dir                 to "" (default value)
+    -   set volumes_binds               to nil (default value)
+    - starting ping
+
+Running handlers:
+Running handlers complete
+Chef Client finished, 17/37 resources updated in 02 minutes 56 seconds
