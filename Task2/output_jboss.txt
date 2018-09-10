@@ -1,0 +1,68 @@
+[root@node2 ~]# chef-client
+Starting Chef Client, version 14.4.56
+resolving cookbooks for run list: ["jboss"]
+Synchronizing Cookbooks:
+  - jboss (0.1.0)
+Installing Cookbook Gems:
+Compiling Cookbooks...
+Converging 9 resources
+Recipe: jboss::default
+  * yum_package[java-1.8.0-openjdk] action install
+    - install version 1:1.8.0.181-3.b13.el7_5.x86_64 of package java-1.8.0-openjdk
+  * linux_user[jboss] action create
+    - create user jboss
+  * group[jboss] action create (up to date)
+  * yum_package[unzip] action install
+    - install version 0:6.0-19.el7.x86_64 of package unzip
+  * remote_file[/opt/jboss.zip] action create
+    - create new file /opt/jboss.zip
+    - update content in file /opt/jboss.zip from none to be93bc
+    (file sizes exceed 10000000 bytes, diff output suppressed)
+    - change owner from '' to 'jboss'
+    - change group from '' to 'jboss'
+  * bash[unzip] action run
+    - execute "bash"  "/tmp/chef-script20180907-13384-gh66vv"
+  * systemd_unit[jboss.service] action create
+  Recipe: <Dynamically Defined Resource>
+    * file[/etc/systemd/system/jboss.service] action create
+      - create new file /etc/systemd/system/jboss.service
+      - update content in file /etc/systemd/system/jboss.service from none to cd66b2
+      --- /etc/systemd/system/jboss.service	2018-09-07 15:45:54.987740051 +0100
+      +++ /etc/systemd/system/.chef-jboss20180907-13384-z44kwe.service	2018-09-07 15:45:54.840739628 +0100
+      @@ -1 +1,12 @@
+      +  [Unit]
+      +  Description=Jboss Application Server
+      +  After=network.target
+      +  [Service]
+      +  Type=forking
+      +  User=jboss
+      +  Group=jboss
+      +  ExecStart=/bin/bash -c 'nohup /opt/jboss/bin/run.sh -b 192.168.1.52 &'
+      +  ExecStop=/bin/bash -c 'bin/shutdown.sh -s 192.168.1.52 -u admin -p admin'
+      +  [Install]
+      +  WantedBy=multi-user.target
+      - change mode from '' to '0644'
+      - change owner from '' to 'root'
+      - change group from '' to 'root'
+    - creating unit: jboss.service
+Recipe: jboss::default
+  * systemd_unit[jboss.service] action enable
+    - enabling unit: jboss.service
+  * systemd_unit[jboss.service] action start
+    - starting unit: jboss.service
+  * remote_file[/opt/jboss/server/default/deploy/sample.war] action create_if_missing
+     - Progress: 100%
+    - create new file /opt/jboss/server/default/deploy/sample.war
+    - update content in file /opt/jboss/server/default/deploy/sample.war from none to 89b33c
+    (new content is binary, diff output suppressed)
+    - change owner from '' to 'jboss'
+    - change group from '' to 'jboss'
+  * http_request[check] action get[2018-09-07T15:45:55+01:00] ERROR: Connection refused connecting to http://192.168.1.52:8080/, retry 1/5
+[2018-09-07T15:46:00+01:00] ERROR: Connection refused connecting to http://192.168.1.52:8080/, retry 2/5
+[2018-09-07T15:46:05+01:00] ERROR: Connection refused connecting to http://192.168.1.52:8080/, retry 3/5
+
+    - http_request[check] GET to http://192.168.1.52:8080/
+
+Running handlers:
+Running handlers complete
+Chef Client finished, 11/12 resources updated in 16 minutes 44 seconds

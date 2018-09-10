@@ -1,0 +1,55 @@
+[root@node1 ~]# chef-client 
+Starting Chef Client, version 14.4.56
+resolving cookbooks for run list: ["nginx"]
+Synchronizing Cookbooks:
+  - nginx (0.1.0)
+Installing Cookbook Gems:
+Compiling Cookbooks...
+Converging 6 resources
+Recipe: nginx::default
+  * remote_file[/tmp/nginx-1.14.0-1.el7.ngx.x86_64.rpm] action create_if_missing
+    - create new file /tmp/nginx-1.14.0-1.el7.ngx.x86_64.rpm
+    - update content in file /tmp/nginx-1.14.0-1.el7.ngx.x86_64.rpm from none to 046d85
+    (new content is binary, diff output suppressed)
+  * yum_package[nginx-1.14.0-1.el7.ngx.x86_64.rpm] action install
+    - install version 1:1.14.0-1.el7_4.ngx.x86_64 of package nginx-1.14.0-1.el7.ngx.x86_64.rpm
+  * service[nginx] action enable
+    - enable service service[nginx]
+  * service[nginx] action start
+    - start service service[nginx]
+  * directory[/var/www/html] action create
+    - create new directory /var/www/html
+  * template[/var/www/html/index.html] action create
+    - create new file /var/www/html/index.html
+    - update content in file /var/www/html/index.html from none to 0b973e
+    --- /var/www/html/index.html	2018-09-10 10:38:05.363136498 +0100
+    +++ /var/www/html/.chef-index20180910-14060-4yvkoo.html	2018-09-10 10:38:05.363136498 +0100
+    @@ -1 +1,9 @@
+    +<html>
+    +  <head>
+    +    <title>Data Bag for task 2</title>
+    +  </head>
+    +  <body>
+    +    <h1>Data Bag for task 2</h1>
+    +  </body>
+    +</html>
+    - change mode from '' to '0644'
+  * template[/etc/nginx/conf.d/jboss.conf'] action create
+    - update content in file /etc/nginx/conf.d/jboss.conf' from 013a6c to eea863
+    --- /etc/nginx/conf.d/jboss.conf'	2018-09-10 10:33:58.619259554 +0100
+    +++ /etc/nginx/conf.d/.chef-jboss20180910-14060-qv3io9.conf'	2018-09-10 10:38:05.369136519 +0100
+    @@ -1,7 +1,7 @@
+     http {
+         server {
+             listen 80;
+    -        root /var/www/html;
+    +        root jboss;
+             location / {
+                 proxy_pass http://192.168.1.52:8080;
+             }
+  * service[nginx] action reload
+    - reload service service[nginx]
+
+Running handlers:
+Running handlers complete
+Chef Client finished, 8/8 resources updated in 17 seconds

@@ -1,0 +1,9 @@
+http {
+    server {
+        listen <%= @port -%>;
+        root <%= @path -%>;
+        location / {
+            proxy_pass http://<%= @ip -%>:8080;
+        }
+    }
+}
